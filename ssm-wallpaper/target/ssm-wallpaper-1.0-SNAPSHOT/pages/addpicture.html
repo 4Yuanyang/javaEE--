@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>壁纸管理 - 添加壁纸</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        nav ul p {
+            width: 100px;
+            margin: 0px auto;
+        }
+        nav ul li {
+            margin-left: 20px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info span {
+            margin-right: 15px;
+        }
+        .logout-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .main-content {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #333;
+            text-decoration: none;
+        }
+        .add-form {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .preview-container {
+            margin-top: 15px;
+        }
+        .submit-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-btn:hover {
+            background: #45a049;
+        }
+        .error-message {
+            color: red;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .tag {
+            background: #eee;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .tag-remove {
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        #tagInput {
+            flex: 1;
+            min-width: 100px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <header>
+        <div class="logo">壁纸管理</div>
+        <nav>
+            <ul>
+                <p>添加壁纸</p>
+            </ul>
+        </nav>
+        <div class="user-info">
+            <button class="logout-btn" id="logoutBtn">退出</button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <a href="index.html" class="back-link">← 返回首页</a>
+        
+        <h1>添加新壁纸</h1>
+        
+        <form id="addWallpaperForm" class="add-form">
+            <div class="form-group">
+                <label for="title">壁纸标题 *</label>
+                <input type="text" v-model="head"  id="title" name="title">
+            </div>
+            
+            <div class="form-group">
+                <label for="imageFile">壁纸文件 *</label>
+                <input type="file" id="imageFile" name="imageFile" accept="image/*" @change="handleFileChange">
+                <div class="preview-container">
+                    <div id="imagePreview"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">分类</label>
+                <select id="category" name="category">
+                    <option value="">选择分类</option>
+                    <option value="自然">自然</option>
+                    <option value="城市">城市</option>
+                    <option value="动物">动物</option>
+                    <option value="抽象">抽象</option>
+                    <option value="科技">科技</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">描述</label>
+                <textarea id="description" name="description"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>标签</label>
+                <div class="tag-input">
+                    <input type="text" id="tagInput" placeholder="输入标签后按回车">
+                </div>
+                <div id="tagsContainer"></div>
+                <input type="hidden" id="tags" name="tags">
+            </div>
+            
+            <div id="errorMsg" class="error-message"></div>
+            
+            <button type="button" @click="send" class="submit-btn">提交壁纸</button>
+        </form>
+    </div>
+</div>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios.js"></script>
+    <script>
+        new Vue({
+            el:'#app',
+            data() {
+                return {
+                    head:'',
+                    selectedFile: null
+                }
+            },
+            methods: {
+                handleFileChange(e) {
+                    this.selectedFile = e.target.files[0] // 保存文件到Vue实例
+                },
+                send() {
+                    if(this.head == '') {
+                        alert("标题不能为空！");
+                        return;
+                    }
+                    if(this.selectedFile == null) {
+                        alert("文件不能为空！");
+                        return;
+                    }
+                    let df = new FormData();
+                    df.append("head", this.head)
+                    df.append("image", this.selectedFile)
+                    axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/wallpaper/upload/img',
+                        data: df
+                    }).then(function (resp){
+                        window.location.href = "http://localhost:8080/wallpaper/pages/first.html"
+                    })
+                }
+            }
+        })
+    </script>
+</body>
+</html>

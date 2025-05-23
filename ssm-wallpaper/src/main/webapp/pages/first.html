@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>壁纸管理 - 首页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        nav p {
+            width: 100px;
+            margin: 0px auto;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info span {
+            margin-right: 15px;
+        }
+        .logout-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .main-content {
+            margin: 0px auto;
+            padding: 20px;
+            width: 1600px;
+        }
+        .mian-content>span {
+            line-height: 1rem;
+        }
+        .wallpaper-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .add-wallpaper-btn {
+            display: block;
+            background: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .search-bar {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+        }
+        .search-bar button {
+            padding: 10px 15px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        .img-ul {
+            list-style: none;
+        }
+        .img-ul::after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+        .img-ul>li {
+            display: inline-block;
+            float: left;
+        }
+        .img-ul>li>img{
+            display: inline-block;
+            width:480px;
+            height:320px;
+            margin: 30px 20px;
+            border:0.5px #ffffff78 solid;
+            box-shadow: 0px 0px 10px 10px #b3a0a4;
+            transition: all 0.2s;
+        }
+        .img-ul>li>img:hover {
+            transform: scale(1.1, 1.1);
+            box-shadow: 0px 0px 8px 5px #b3a0a4;
+            z-index : 2;
+        }
+        #page {
+            display: inline-block;
+            height: 1rem;
+            width: 50px;
+            text-align: center;
+            border: 1px black solid;
+        }
+        #page:focus{
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <header>
+        <div class="logo">壁纸管理</div>
+        <nav>
+            <p>首页</p>
+        </nav>
+        <div class="user-info">
+            <span>欢迎，<span id="username">{{userName}}</span></span>
+            <button class="logout-btn" id="logoutBtn" @click="outUI">退出</button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <h1>壁纸展示</h1>
+        <div class="wallpaper-grid" id="wallpaperGrid">
+            <ul class="img-ul">
+                <li v-for="(imageUrl, index) in images" :key="index">
+                    <img :src="imageUrl" @click="getInfo">
+                </li>
+            </ul>
+        </div>
+        <span>第</span> <input type="text" @change="getImg" id="page" v-model="pages"> <span>页</span>
+<!--        <a href="addpicture.html" class="add-wallpaper-btn">添加新壁纸</a>-->
+        <span class="add-wallpaper-btn" @click="addImg">添加新壁纸</span>
+    </div>
+</div>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios.js"></script>
+    <script>
+        new Vue({
+            el: "#app",
+            data() {
+                return {
+                    images:[],
+                    pages: "",
+                    clickImg: {
+                        id: "",
+                        head:"",
+                        url:"",
+                        hid:"",
+                        createTime:""
+                    },
+                    userName: ""
+                }
+            },
+            methods: {
+                getImg() {
+                    const page = (this.pages == '' ? 1 : parseInt(this.pages));
+                    this.pages = page;
+                    axios.get(`http://localhost:8080/wallpaper/images/${page}`)
+                        .then(response => {
+                            if(response.data && response.data.data) {
+                                // 直接将API返回的图片URL数组赋值给images
+                                this.images = response.data.data;
+                                this.userName = response.data.msg;
+                            }
+                        })
+                        .catch(error => {
+                            console.error("获取图片失败:", error);
+                            alert("获取图片失败，请检查网络或稍后重试");
+                        });
+                },
+                getInfo(e) {
+                    window.location.href = 'detail.html?purl=' + encodeURIComponent(e.target.src);
+                },
+                addImg() {
+                    //先判断是否登录
+                    axios({
+                        method: 'get',
+                        url:'http://localhost:8080/wallpaper/login',
+                    }).then(resp => {
+                        if(resp.data.code == 40211) {
+                            window.location.href = 'http://localhost:8080/wallpaper/pages/login.html';
+                            alert('请先登录！');
+                        }else {
+                            window.location.href = 'http://localhost:8080/wallpaper/pages/addpicture.html'
+                        }
+                    })
+                },
+                outUI() {
+                    var flag = confirm("确定要退出吗？");
+                    if(flag) {
+                        axios({
+                            method:'get',
+                            url:'http://localhost:8080/wallpaper/users/loginOut',
+                        })
+                        this.userName = "用户"
+                        alert("退出成功！");
+
+                    }
+                }
+            },
+            mounted() {
+                this.getImg();
+            }
+        })
+
+    </script>
+</body>
+</html>

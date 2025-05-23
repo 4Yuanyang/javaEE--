@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>壁纸管理 - 详情</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        nav ul li {
+            margin-left: 20px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info span {
+            margin-right: 15px;
+        }
+        .logout-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .main-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #333;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            color:black;
+        }
+        .wallpaper-detail {
+            background: linear-gradient(to right bottom, #e0cbcb, #cbdfc9, #c28c8c, #a155cb, #e5b96c82);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .wallpaper-detail::after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+        .wallpaper-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            margin-bottom: 20px;
+        }
+        .wallpaper-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .wallpaper-meta {
+            display: flex;
+            margin-bottom: 15px;
+            color: #666;
+        }
+        .wallpaper-meta span {
+            margin-right: 15px;
+        }
+        .wallpaper-description {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .download-btn {
+            display: inline-block;
+            background: #4285f4;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        .favorite-btn {
+            display: inline-block;
+            background: #ff4444;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+        .tags {
+            margin-top: 20px;
+        }
+        .tag {
+            display: inline-block;
+            background: #eee;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        #img {
+            width: 700px;
+            float: left;
+            text-align: center;
+        }
+        #img>h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        #img>img {
+            width: 600px;
+            height: 390px;
+        }
+        #imgdetail {
+            float: left;
+            width: 250px;
+            height: 200px;
+            padding-top: 55px;
+        }
+        #imgdetail>p {
+            line-height: 2.5rem;
+            color: black;
+            font-weight: bold;
+            text-shadow: 0.5px 0.5px 1px #766060;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <header>
+        <div class="logo">壁纸管理</div>
+        <nav>
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="add.html">添加壁纸</a></li>
+            </ul>
+        </nav>
+        <div class="user-info">
+<!--            <button class="logout-btn" id="logoutBtn" @click="outUI">退出</button>-->
+        </div>
+    </header>
+
+    <div class="main-content">
+        <span class="back-link" @click="goBack">← 返回首页</span>
+        
+        <div class="wallpaper-detail" id="wallpaperDetail">
+            <div id="img">
+                <h3>{{image.head}} 4K壁纸</h3>
+                <img :src="image.purl"></img>
+            </div>
+            <div id="imgdetail">
+                <p>标题：{{image.head}}</p>
+                <p>用户：{{userName}}</p>
+                <p>上传时间：{{image.createTime}}</p>
+            </div>
+        </div><br>
+        <p class="download-btn" @click="download">下载图片</p>
+    </div>
+</div>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios.js"></script>
+    <script>
+        new Vue({
+            el:"#app",
+            data() {
+                return {
+                    image: {
+                        head:'',
+                        hid:'',
+                        purl:'',
+                        createTime:''
+                    },
+                    userName: ""
+                }
+            },
+            methods: {
+                 goBack() {
+                     window.history.back();
+                 },
+                getInfo() {
+                    // 获取完整查询字符串（如 "?id=123&purl=example"）
+                    const queryString = window.location.search;
+
+                    // 解析参数
+                    const urlParams = new URLSearchParams(queryString);
+                    const purlValue = urlParams.get('purl'); // 直接获取参数值
+                    // let purl = decodeURIComponent(purlValue);
+                    this.image.purl = purlValue;
+                },
+                download() {
+                     axios({
+                         method: 'get',
+                         url:'http://localhost:8080/wallpaper/login'
+                     }).then(resp => {
+                         if(resp.data.code == 40211) {
+                             window.location.href = 'http://localhost:8080/wallpaper/pages/login.html';
+                             alert('请先登录！');
+                         }else {
+                             alert("下载中，请稍后...");
+                         }
+                     })
+                },
+            },
+            mounted() {
+                this.getInfo();
+                let phead = "";
+                let hid = "";
+                let pcreateTime = "";
+                const params = new URLSearchParams()
+                params.append('url', this.image.purl)
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8080/wallpaper/images',
+                    headers: {
+                      'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    data: params
+                }).then(resp => {
+                    this.image.purl = resp.data.data.url;
+                    phead = resp.data.data.head;
+                    hid = resp.data.data.hid;
+                    pcreateTime = resp.data.data.createTime;
+                    //在获取上传图片的用户姓名
+                    axios({
+                        method: 'get',
+                        url: `http://localhost:8080/wallpaper/users/${hid}`,
+                    }).then(resp=> {
+                        this.image.head = phead;
+                        this.image.createTime = pcreateTime;
+                        this.userName = resp.data.data.userName;
+                    })
+                })
+
+            }
+        })
+    </script>
+</body>
+</html>

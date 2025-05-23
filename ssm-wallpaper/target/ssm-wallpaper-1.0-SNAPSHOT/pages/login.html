@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>壁纸管理 - 登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 350px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .register-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .error-message {
+            color: red;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="login-container">
+        <h2>用户登录</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required v-model="user.userName" @change="getUserByName">
+                <p class="error-message">{{noUserMes}}</p>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required v-model="user.password">
+            </div>
+            <div id="errorMsg" class="error-message">{{errPsw}}</div>
+            <button type="button" @click="login">登录</button>
+        </form>
+        <div class="register-link">
+            还没有账号？<a href="register.html">立即注册</a>
+        </div>
+    </div>
+</div>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios.js"></script>
+    <script>
+        /*document.getElementById(username).onblur = function() {
+            //
+
+            axios({
+                method:"post",
+                url:('http://localhost:8080/wallpaper/users/checkUser' + this.user.userName),
+            }).then(function (resp) {
+                console.log(resp.data);
+                if(resp.data.data.code == 40011) {
+                    //
+                }
+            })
+        }*/
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    user: {
+                        id: null,
+                        userName: "",
+                        password: ""
+                    },
+                    noUserMes: "",
+                    errPsw: ""
+                }
+            },
+            methods: {
+                getUserByName() {
+                    if(!this.user.userName) {
+                        this.noUserMes = "用户名不能为空";
+                        return;
+                    }
+                    let _this = this;
+
+                    console.log(this.user.userName);
+
+                    axios({
+                        method:"get",
+                        url:('http://localhost:8080/wallpaper/users/exists/' + encodeURIComponent(this.user.userName))
+                    }).then(function (resp) {
+                        console.log(resp.data);
+                        _this.noUserMes = resp.data.msg;
+                    })
+                },
+                login() {
+                    if(!this.user.password) {
+                        this.errPsw = "密码不能为空";
+                        return;
+                    }
+                    let _this = this;
+                    axios({
+                        method: "post",
+                        url: 'http://localhost:8080/wallpaper/users/checkAccount',
+                        data: _this.user
+                    }).then(function (resp) {
+                        _this.errPsw = resp.data.msg;
+                        if(resp.data.code == 40020) {
+                            console.log(_this.errPsw);
+                            window.location.href = "http://localhost:8080/wallpaper/pages/first.html"
+                        }
+                    })
+                }
+            }
+        })
+    </script>
+</body>
+</html>
